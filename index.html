@@ -3,7 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>昶青品保部<br>GAI商品進出稽查系統</title>
+    <title>昶青品保部 GAI商品進出稽查系統</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00b4db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GAI稽查系統">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
+    
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         * {
@@ -261,6 +278,64 @@
             text-align: center;
         }
 
+        /* PWA 安裝提示樣式 */
+        #installPrompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 248, 255, 0.9));
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #installPrompt p {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        #installPrompt button {
+            background: linear-gradient(145deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-right: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+        }
+
+        #installPrompt button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 172, 254, 0.4);
+        }
+
+        #dismissBtn {
+            background: linear-gradient(145deg, #ccc, #aaa) !important;
+            color: #333 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+
         /* 響應式設計 */
         @media (max-width: 1024px) {
             .title-container {
@@ -277,32 +352,38 @@
             }
         }
 
-@media (max-width: 768px) {
-    html {
-        background: linear-gradient(135deg, 
-            #1e3c72 0%, 
-            #2a5298 25%, 
-            #00b4db 50%, 
-            #0083b0 75%, 
-            #00a8cc 100%);
-    }
-    
-    body {
-        padding: 15px;
-        background: linear-gradient(135deg, 
-            #1e3c72 0%, 
-            #2a5298 25%, 
-            #00b4db 50%, 
-            #0083b0 75%, 
-            #00a8cc 100%) !important;
-        background-attachment: scroll !important;
-        background-repeat: no-repeat !important;
-        background-size: cover !important;
-        min-height: 100vh !important;
-        min-height: 100dvh !important;
-    }
-}
+        @media (max-width: 768px) {
+            html {
+                background: linear-gradient(135deg, 
+                    #1e3c72 0%, 
+                    #2a5298 25%, 
+                    #00b4db 50%, 
+                    #0083b0 75%, 
+                    #00a8cc 100%);
+            }
+            
+            body {
+                padding: 15px;
+                background: linear-gradient(135deg, 
+                    #1e3c72 0%, 
+                    #2a5298 25%, 
+                    #00b4db 50%, 
+                    #0083b0 75%, 
+                    #00a8cc 100%) !important;
+                background-attachment: scroll !important;
+                background-repeat: no-repeat !important;
+                background-size: cover !important;
+                min-height: 100vh !important;
+                min-height: 100dvh !important;
+            }
 
+            #installPrompt {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                padding: 15px;
+            }
+        }
 
         @media (max-width: 480px) {
             .title-container {
@@ -323,6 +404,15 @@
             .design-credit {
                 top: 10px;
                 right: 15px;
+            }
+
+            #installPrompt p {
+                font-size: 14px;
+            }
+
+            #installPrompt button {
+                padding: 10px 16px;
+                font-size: 14px;
             }
         }
 
@@ -354,6 +444,13 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* iOS Safari 特殊處理 */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                background-attachment: scroll !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -380,10 +477,74 @@
         </div>
     </div>
 
+    <!-- PWA 安裝提示 -->
+    <div id="installPrompt" style="display: none;">
+        <p>📱 安裝 GAI稽查系統到您的設備，享受更好的使用體驗！</p>
+        <button id="installBtn">立即安裝</button>
+        <button id="dismissBtn">稍後再說</button>
+    </div>
+
     <script>
+        // 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // PWA 安裝提示
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installPrompt.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.style.display = 'none';
+            }
+        });
+
+        dismissBtn.addEventListener('click', () => {
+            installPrompt.style.display = 'none';
+            // 24小時後再次顯示
+            localStorage.setItem('installPromptDismissed', Date.now());
+        });
+
+        // 檢查是否應該顯示安裝提示
+        function checkInstallPrompt() {
+            const dismissed = localStorage.getItem('installPromptDismissed');
+            if (dismissed) {
+                const dismissedTime = parseInt(dismissed);
+                const now = Date.now();
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+                
+                if (now - dismissedTime < twentyFourHours) {
+                    return; // 24小時內不顯示
+                }
+            }
+        }
+
         // 頁面載入動畫
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('品保部-GAI商品進出稽查系統已載入');
+            console.log('品保部-GAI商品進出稽查系統已載入 (PWA版本)');
+            
+            checkInstallPrompt();
             
             // 為按鈕添加點擊波紋效果
             const buttons = document.querySelectorAll('.button');
@@ -477,6 +638,24 @@
                 document.querySelector('.button:last-of-type').click();
             }
         });
+
+        // PWA 狀態檢測
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA 已安裝成功！');
+            installPrompt.style.display = 'none';
+        });
+
+        // 檢測是否在 PWA 模式下運行
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone ||
+                   document.referrer.includes('android-app://');
+        }
+
+        if (isPWA()) {
+            console.log('正在 PWA 模式下運行');
+            // 可以添加 PWA 特定的功能
+        }
     </script>
 </body>
 </html>
