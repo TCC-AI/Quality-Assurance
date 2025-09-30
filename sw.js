@@ -49,7 +49,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// 更新 Service Worker
+// 更新 Service Worker (續)
 self.addEventListener('activate', event => {
   console.log('Service Worker activating...');
   event.waitUntil(
@@ -63,4 +63,41 @@ self.addEventListener('activate', event => {
         })
       );
     }).then(() => {
+      // 立即控制所有頁面
+      return self.clients.claim();
+    })
+  );
+});
+
+// 處理推送通知（可選）
+self.addEventListener('push', event => {
+  console.log('Push event received');
+  
+  const options = {
+    body: event.data ? event.data.text() : 'GAI稽查系統有新的更新',
+    icon: './icon-192x192.png',
+    badge: './icon-96x96.png',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('GAI稽查系統', options)
+  );
+});
+
+// 處理通知點擊
+self.addEventListener('notificationclick', event => {
+  console.log('Notification click received.');
+  
+  event.notification.close();
+  
+  event.waitUntil(
+    clients.openWindow('./')
+  );
+});
+
       // 立即控制所有
