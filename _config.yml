@@ -1,0 +1,19 @@
+# GitHub Pages 配置
+plugins:
+  - jekyll-relative-links
+
+# 確保所有文件都被處理
+include:
+  - manifest.json
+  - sw.js
+  - "*.png"
+
+# 相對連結設定
+relative_links:
+  enabled: true
+  collections: false
+
+# 排除不需要的文件
+exclude:
+  - README.md
+  - .gitignore
