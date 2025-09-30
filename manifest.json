@@ -2,12 +2,12 @@
   "name": "昶青品保部 GAI商品稽查系統",
   "short_name": "GAI稽查系統",
   "description": "昶青品保部商品稽查管理系統",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#1e3c72",
   "theme_color": "#00b4db",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "./",
   "lang": "zh-TW",
   "icons": [
     {
