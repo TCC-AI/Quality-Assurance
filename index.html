@@ -23,7 +23,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     
-    <!-- 您的所有 CSS 樣式保持不變 -->
     <style>
         * {
             margin: 0;
@@ -338,6 +337,124 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
         }
 
+        /* 手動安裝容器樣式 */
+        .manual-install-container {
+            margin-top: 30px;
+            width: 90%;
+            max-width: 800px;
+            animation: fadeInUp 1.2s ease-out 0.6s both;
+        }
+
+        .install-button {
+            width: 100%;
+            padding: 20px 30px;
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .install-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transition: left 0.5s;
+        }
+
+        .install-button:hover::before {
+            left: 100%;
+        }
+
+        .install-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(145deg, #ee5a52, #ff6b6b);
+        }
+
+        .install-button:active {
+            transform: translateY(-1px);
+            transition: all 0.1s ease;
+        }
+
+        /* 安裝說明樣式 */
+        .install-instructions {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px;
+            text-align: left;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .install-instructions h3 {
+            margin-bottom: 15px;
+            color: #1e3c72;
+            font-size: 20px;
+        }
+
+        .install-instructions ol {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .install-instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .install-instructions .tip {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            background: rgba(79, 172, 254, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .close-btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #0056CC;
+            transform: translateY(-1px);
+        }
+
+        .close-btn.android {
+            background: #4285F4;
+        }
+
+        .close-btn.android:hover {
+            background: #3367D6;
+        }
+
         /* 響應式設計 */
         @media (max-width: 1024px) {
             .title-container {
@@ -351,6 +468,10 @@
             
             .button-container {
                 gap: 25px;
+            }
+            
+            .manual-install-container {
+                margin-top: 25px;
             }
         }
 
@@ -385,6 +506,11 @@
                 right: 10px;
                 padding: 15px;
             }
+
+            .install-instructions {
+                margin: 10px;
+                padding: 15px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -415,6 +541,14 @@
             #installPrompt button {
                 padding: 10px 16px;
                 font-size: 14px;
+            }
+
+            .manual-install-container {
+                margin-top: 20px;
+            }
+
+            .install-button {
+                padding: 16px 20px;
             }
         }
 
@@ -470,6 +604,13 @@
             【出貨抽檢紀錄表】<br>【小包裝】
         </button>
     </div>
+
+    <!-- 手動安裝容器 -->
+    <div class="manual-install-container" id="manualInstallContainer" style="display: none;">
+        <button class="install-button" id="manualInstallBtn">
+            📱 安裝到手機桌面
+        </button>
+    </div>
     
     <!-- Loading Spinner -->
     <div id="loadingSpinner">
@@ -507,32 +648,120 @@
             });
         }
 
-        // PWA 安裝提示
+        // PWA 安裝提示變數
         let deferredPrompt;
         const installPrompt = document.getElementById('installPrompt');
         const installBtn = document.getElementById('installBtn');
         const dismissBtn = document.getElementById('dismissBtn');
+        const manualInstallContainer = document.getElementById('manualInstallContainer');
+        const manualInstallBtn = document.getElementById('manualInstallBtn');
 
+        // 檢測是否可以安裝
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installPrompt.style.display = 'block';
+            
+            // 顯示自動安裝提示（桌面版）
+            if (window.innerWidth > 768) {
+                const dismissed = localStorage.getItem('installPromptDismissed');
+                if (!dismissed || (Date.now() - parseInt(dismissed)) > 24 * 60 * 60 * 1000) {
+                    installPrompt.style.display = 'block';
+                }
+            }
+            
+            // 顯示手動安裝按鈕（手機版）
+            manualInstallContainer.style.display = 'block';
         });
 
+        // 自動安裝按鈕點擊事件
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
+                console.log(`安裝結果: ${outcome}`);
                 deferredPrompt = null;
                 installPrompt.style.display = 'none';
+                if (outcome === 'accepted') {
+                    manualInstallContainer.style.display = 'none';
+                }
             }
         });
 
+        // 拒絕安裝按鈕點擊事件
         dismissBtn.addEventListener('click', () => {
             installPrompt.style.display = 'none';
             localStorage.setItem('installPromptDismissed', Date.now());
         });
+
+        // 手動安裝按鈕點擊事件
+        manualInstallBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`安裝結果: ${outcome}`);
+                deferredPrompt = null;
+                if (outcome === 'accepted') {
+                    manualInstallContainer.style.display = 'none';
+                }
+            } else {
+                // 如果沒有安裝提示，顯示手動安裝說明
+                showManualInstallInstructions();
+            }
+        });
+
+        // 顯示手動安裝說明
+        function showManualInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            let instructions = '';
+            
+            if (isIOS) {
+                instructions = `
+                    <div class="install-instructions">
+                        <h3>📱 iOS 安裝步驟：</h3>
+                        <ol>
+                            <li>點擊 Safari 底部的 <strong>分享按鈕</strong> 📤</li>
+                            <li>向下滾動找到 <strong>「加入主畫面」</strong></li>
+                            <li>點擊 <strong>「加入主畫面」</strong></li>
+                            <li>確認安裝</li>
+                        </ol>
+                        <div class="tip">
+                            💡 提示：安裝後可以像原生 App 一樣使用，支援離線功能！
+                        </div>
+                        <button class="close-btn" onclick="this.parentElement.remove()">知道了</button>
+                    </div>
+                `;
+            } else if (isAndroid) {
+                instructions = `
+                    <div class="install-instructions">
+                        <h3>📱 Android 安裝步驟：</h3>
+                        <ol>
+                            <li>點擊 Chrome 右上角的 <strong>選單按鈕</strong> ⋮</li>
+                            <li>選擇 <strong>「安裝應用程式」</strong> 或 <strong>「加到主畫面」</strong></li>
+                            <li>確認安裝</li>
+                        </ol>
+                        <div class="tip">
+                            💡 提示：如果沒有看到安裝選項，請多使用幾次網站後再試。安裝後可享受更快的載入速度和離線功能！
+                        </div>
+                        <button class="close-btn android" onclick="this.parentElement.remove()">知道了</button>
+                    </div>
+                `;
+            } else {
+                instructions = `
+                    <div class="install-instructions">
+                        <h3>💻 安裝說明：</h3>
+                        <p>請使用支援 PWA 的瀏覽器（如 Chrome、Edge）來安裝此應用程式。</p>
+                        <div class="tip">
+                            💡 建議使用 Chrome 瀏覽器以獲得最佳體驗。
+                        </div>
+                        <button class="close-btn" onclick="this.parentElement.remove()">知道了</button>
+                    </div>
+                `;
+            }
+            
+            document.body.insertAdjacentHTML('beforeend', instructions);
+        }
 
         // 檢查是否應該顯示安裝提示
         function checkInstallPrompt() {
@@ -548,6 +777,17 @@
             }
         }
 
+               // 在頁面載入後延遲顯示（針對手機）
+        setTimeout(() => {
+            if (window.innerWidth <= 768 && !localStorage.getItem('installPromptDismissed')) {
+                if (deferredPrompt) {
+                    installPrompt.style.display = 'block';
+                } else if (!manualInstallContainer.style.display || manualInstallContainer.style.display === 'none') {
+                    manualInstallContainer.style.display = 'block';
+                }
+            }
+        }, 3000); // 3秒後顯示
+
         // 頁面載入動畫
         document.addEventListener('DOMContentLoaded', function() {
             console.log('品保部-GAI商品進出稽查系統已載入 (PWA版本)');
@@ -555,7 +795,7 @@
             checkInstallPrompt();
             
             // 為按鈕添加點擊波紋效果
-            const buttons = document.querySelectorAll('.button');
+            const buttons = document.querySelectorAll('.button, .install-button');
             buttons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     const ripple = document.createElement('div');
@@ -650,6 +890,52 @@
         window.addEventListener('appinstalled', (evt) => {
             console.log('PWA 已安裝成功！');
             installPrompt.style.display = 'none';
+            manualInstallContainer.style.display = 'none';
+            
+            // 顯示安裝成功訊息
+            const successMessage = document.createElement('div');
+            successMessage.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(145deg, #43e97b, #38f9d7);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 15px;
+                font-size: 18px;
+                font-weight: 600;
+                box-shadow: 0 10px 30px rgba(67, 233, 123, 0.3);
+                z-index: 2000;
+                text-align: center;
+                animation: successPop 0.5s ease-out;
+            `;
+            successMessage.innerHTML = '🎉 安裝成功！<br>現在可以從桌面啟動應用程式了！';
+            
+            document.body.appendChild(successMessage);
+            
+            setTimeout(() => {
+                successMessage.remove();
+            }, 3000);
+            
+            // 添加成功動畫
+            const successStyle = document.createElement('style');
+            successStyle.textContent = `
+                @keyframes successPop {
+                    0% {
+                        opacity: 0;
+                        transform: translate(-50%, -50%) scale(0.5);
+                    }
+                    50% {
+                        transform: translate(-50%, -50%) scale(1.1);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                }
+            `;
+            document.head.appendChild(successStyle);
         });
 
         // 檢測是否在 PWA 模式下運行
@@ -661,6 +947,76 @@
 
         if (isPWA()) {
             console.log('正在 PWA 模式下運行');
+            // 隱藏安裝相關元素
+            installPrompt.style.display = 'none';
+            manualInstallContainer.style.display = 'none';
+        }
+
+        // 強制顯示安裝提示的功能（除錯用）
+        function forceShowInstallPrompt() {
+            localStorage.removeItem('installPromptDismissed');
+            
+            if (deferredPrompt) {
+                installPrompt.style.display = 'block';
+            } else {
+                manualInstallContainer.style.display = 'block';
+            }
+        }
+
+        // 檢測網路狀態
+        window.addEventListener('online', function() {
+            console.log('網路連線已恢復');
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('網路連線已中斷，PWA 將使用快取資源');
+        });
+
+        // 檢測安裝狀態變化
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA 安裝提示已準備就緒');
+        });
+
+        // 處理 PWA 更新
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('PWA 已更新，請重新載入頁面以獲得最新版本');
+                
+                // 可選：顯示更新提示
+                const updateNotice = document.createElement('div');
+                updateNotice.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    right: 20px;
+                    background: linear-gradient(145deg, #4facfe, #00f2fe);
+                    color: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    font-size: 14px;
+                    text-align: center;
+                    z-index: 1500;
+                    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+                `;
+                updateNotice.innerHTML = `
+                    <div>🔄 應用程式已更新</div>
+                    <button onclick="window.location.reload()" style="
+                        background: rgba(255,255,255,0.2);
+                        border: 1px solid rgba(255,255,255,0.3);
+                        color: white;
+                        padding: 8px 15px;
+                        border-radius: 5px;
+                        margin-top: 10px;
+                        cursor: pointer;
+                    ">重新載入</button>
+                `;
+                
+                document.body.appendChild(updateNotice);
+                
+                setTimeout(() => {
+                    updateNotice.remove();
+                }, 10000);
+            });
         }
     </script>
 </body>
